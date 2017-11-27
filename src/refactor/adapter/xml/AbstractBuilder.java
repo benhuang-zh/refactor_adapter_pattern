@@ -15,28 +15,32 @@ public abstract class AbstractBuilder implements OutputBuilder {
     }
 
     public void addAbove(String uncle) {
-        if (current == root)
-            throw new RuntimeException(CANNOT_ADD_ABOVE_ROOT);
-        history.pop();
-        boolean atRootNode = (history.size() == 1);
-        if (atRootNode)
-            throw new RuntimeException(CANNOT_ADD_ABOVE_ROOT);
+        checkRootNode();
+        moveToFatherNode();
         history.pop();
         current = (Adapter) history.peek();
         addBelow(uncle);
     }
 
     public void addGrandfather(String grandfather) {
-        if (current == root)
-            throw new RuntimeException(CANNOT_ADD_ABOVE_ROOT);
-        history.pop();
-        boolean atRootNode = (history.size() == 1);
-        if (atRootNode)
-            throw new RuntimeException(CANNOT_ADD_ABOVE_ROOT);
+        checkRootNode();
+        moveToFatherNode();
         history.pop();
         history.pop();
         current = (Adapter) history.peek();
         addBelow(grandfather);
+    }
+
+    private void moveToFatherNode() {
+        history.pop();
+        boolean atRootNode = (history.size() == 1);
+        if (atRootNode)
+            throw new RuntimeException(CANNOT_ADD_ABOVE_ROOT);
+    }
+
+    private void checkRootNode() {
+        if (current == root)
+            throw new RuntimeException(CANNOT_ADD_ABOVE_ROOT);
     }
 
     public void addAttribute(String name, String value) {
