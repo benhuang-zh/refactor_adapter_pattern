@@ -1,20 +1,16 @@
 package refactor.adapter.xml;
 
-import java.io.IOException;
-import java.io.StringWriter;
-import java.util.Stack;
-
 import org.apache.xerces.dom.DocumentImpl;
-import org.apache.xml.serialize.OutputFormat;
-import org.apache.xml.serialize.XMLSerializer;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
+import java.util.Stack;
+
 public class DOMBuilder extends AbstractBuilder {
 	private Document doc;
-	private Element root;
-	private Element parent;
-	private Element current;
+	private Adapter root;
+	private Adapter parent;
+	private Adapter current;
 
 	public DOMBuilder(String rootName) {
 		init(rootName);
@@ -28,7 +24,7 @@ public class DOMBuilder extends AbstractBuilder {
 		if (atRootNode)
 			throw new RuntimeException(CANNOT_ADD_ABOVE_ROOT);
 		history.pop();
-		current = (Element) history.peek();
+		current = (Adapter) history.peek();
 		addBelow(uncle);
 	}
 
@@ -41,17 +37,16 @@ public class DOMBuilder extends AbstractBuilder {
 			throw new RuntimeException(CANNOT_ADD_ABOVE_ROOT);
 		history.pop();
 		history.pop();
-		current = (Element) history.peek();
+		current = (Adapter) history.peek();
 		addBelow(grandfather);
 	}
 
 	public void addAttribute(String name, String value) {
-		current.setAttribute(name, value);
+		current.addAttribute(name, value);
 	}
 
 	public void addBelow(String child) {
-		Element childNode = doc.createElement(child);
-		current.appendChild(childNode);
+		Adapter childNode = current.add(child);
 		parent = current;
 		current = childNode;
 		history.push(current);
@@ -60,15 +55,13 @@ public class DOMBuilder extends AbstractBuilder {
 	public void addBeside(String sibling) {
 		if (current == root)
 			throw new RuntimeException(CANNOT_ADD_BESIDE_ROOT);
-		Element siblingNode = doc.createElement(sibling);
-		parent.appendChild(siblingNode);
-		current = siblingNode;
+		current = parent.add(sibling);
 		history.pop();
 		history.push(current);
 	}
 
 	public void addValue(String value) {
-		current.appendChild(doc.createTextNode(value));
+		current.addValue(value);
 	}
 
 	public Document getDocument() {
@@ -77,8 +70,10 @@ public class DOMBuilder extends AbstractBuilder {
 
 	protected void init(String rootName) {
 		doc = new DocumentImpl();
-		root = doc.createElement(rootName);
-		doc.appendChild(root);
+		Element rootElement = doc.createElement(rootName);
+		doc.appendChild(rootElement);
+
+		root = new ElementAdapter(doc, rootElement);
 		current = root;
 		parent = root;
 		history = new Stack();
@@ -90,16 +85,6 @@ public class DOMBuilder extends AbstractBuilder {
 	}
 
 	public String toString() {
-		OutputFormat format = new OutputFormat(doc);
-		StringWriter stringOut = new StringWriter();
-		XMLSerializer serial = new XMLSerializer(stringOut, format);
-		try {
-			serial.asDOMSerializer();
-			serial.serialize(doc.getDocumentElement());
-		} catch (IOException ioe) {
-			ioe.printStackTrace();
-			return ioe.getMessage();
-		}
-		return stringOut.toString();
+		return root.toString();
 	}
 }
