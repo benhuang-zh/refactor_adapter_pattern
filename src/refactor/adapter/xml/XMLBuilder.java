@@ -3,9 +3,9 @@ package refactor.adapter.xml;
 import java.util.Stack;
 
 public class XMLBuilder extends AbstractBuilder {
-	private TagNode root;
-	private TagNode parent;
-	private TagNode current;
+	private Adapter root;
+	private Adapter parent;
+	private Adapter current;
 
 	public XMLBuilder(String rootName) {
 		init(rootName);
@@ -19,7 +19,7 @@ public class XMLBuilder extends AbstractBuilder {
 		if (atRootNode)
 			throw new RuntimeException(CANNOT_ADD_ABOVE_ROOT);
 		history.pop();
-		current = (TagNode) history.peek();
+		current = (Adapter) history.peek();
 		addBelow(uncle);
 	}
 
@@ -32,7 +32,7 @@ public class XMLBuilder extends AbstractBuilder {
 			throw new RuntimeException(CANNOT_ADD_ABOVE_ROOT);
 		history.pop();
 		history.pop();
-		current = (TagNode) history.peek();
+		current = (Adapter) history.peek();
 		addBelow(uncle);
 	}
 
@@ -41,8 +41,7 @@ public class XMLBuilder extends AbstractBuilder {
 	}
 
 	public void addBelow(String child) {
-		TagNode childNode = new TagNode(child);
-		current.add(childNode);
+		Adapter childNode = current.add(child);
 		parent = current;
 		current = childNode;
 		history.push(current);
@@ -51,9 +50,7 @@ public class XMLBuilder extends AbstractBuilder {
 	public void addBeside(String sibling) {
 		if (current == root)
 			throw new RuntimeException(CANNOT_ADD_BESIDE_ROOT);
-		TagNode siblingNode = new TagNode(sibling);
-		parent.add(siblingNode);
-		current = siblingNode;
+		current = parent.add(sibling);
 		history.pop();
 		history.push(current);
 	}
@@ -63,7 +60,7 @@ public class XMLBuilder extends AbstractBuilder {
 	}
 
 	protected void init(String rootName) {
-		root = new TagNode(rootName);
+		root = new TagNodeAdapter(new TagNode(rootName));
 		current = root;
 		parent = root;
 		history = new Stack();
