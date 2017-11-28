@@ -11,7 +11,7 @@ import org.xml.sax.XMLReader;
 import org.xml.sax.helpers.DefaultHandler;
 
 public class PrettyPrinter extends DefaultHandler {
-	private String result;
+	private StringBuilder result;
 	private int count;
 	private boolean startElement;
 	private boolean charFlags = false;
@@ -28,7 +28,7 @@ public class PrettyPrinter extends DefaultHandler {
 			firstItem = false;
 		}
 		resultData = resultData.replaceAll("&", "&amp;");
-		result += resultData;
+		result.append(resultData);
 	}
 
 	public void endElement(String uri, String localName, String qName) {
@@ -38,11 +38,11 @@ public class PrettyPrinter extends DefaultHandler {
 
 		insertTabs();
 		startElement = false;
-		result += "</" + localName + ">\n";
+		result.append("</").append(localName).append(">\n");
 	}
 
 	public String format(String inputXML) {
-		result = "\n";
+		result = new StringBuilder("\n");
 		count = 0;
 		startElement = false;
 		inputXML = stripTabs(inputXML).replaceAll("& ", "&amp; ");
@@ -54,12 +54,12 @@ public class PrettyPrinter extends DefaultHandler {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		return result;
+		return result.toString();
 	}
 
 	private void insertTabs() {
 		for (int x = 0; x < count; x++)
-			result += "\t";
+			result.append("\t");
 	}
 
 	public void startElement(String uri, String localName, String qName,
@@ -69,32 +69,32 @@ public class PrettyPrinter extends DefaultHandler {
 		if (startElement)
 			count++;
 		insertTabs();
-		result += "<" + localName;
+		result.append("<").append(localName);
 		int len;
 		if ((len = attributes.getLength()) > 0) {
-			result += " ";
+			result.append(" ");
 			for (int i = 0; i < len; i++) {
 				String value = attributes.getValue(i);
 				value = value.replaceAll("& ", "&amp; ");
-				result += (attributes.getLocalName(i) + "='" + value + "'");
+				result.append(attributes.getLocalName(i)).append("='").append(value).append("'");
 				if (i < (len - 1))
-					result += " ";
+					result.append(" ");
 			}
 		}
 		startElement = true;
-		result += ">\n";
+		result.append(">\n");
 	}
 
 	public void adjustWithPreviousText() {
 		if (charFlags == true) {
 			charFlags = false;
-			result += "\n";
+			result.append("\n");
 		}
 	}
 
 	private String stripTabs(String rawText) {
 		StringTokenizer tok = new StringTokenizer(rawText, "\t");
-		StringBuffer result = new StringBuffer();
+		StringBuilder result = new StringBuilder();
 		while (tok.hasMoreElements())
 			result.append(tok.nextToken());
 		return result.toString();
